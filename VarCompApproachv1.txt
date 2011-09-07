@@ -1,0 +1,260 @@
+library(smatr)
+library(gplots)
+
+#Loop to run on Gen.pop to assess how different values for the developmental equation influence the #observed variaton
+Loop.Gen.pop<-function(to.loop,vec.to.loop)
+{
+if(to.loop=="s.x")
+ {
+  d<-loop.s.x(vec.to.loop)
+ }
+ else
+ {
+    if(to.loop=="s.sd")
+    {
+     d<-loop.s.sd(vec.to.loop)
+    }
+    else
+    {
+     if(to.loop=="i1.x")
+     {
+       d<-loop.i1.x(vec.to.loop)
+     }
+     else
+     {
+       if(to.loop=="i2.x")
+       {
+         d<-loop.i2.x(vec.to.loop)
+       }
+       else
+       {
+         if(to.loop=="i1.sd")
+         {
+           d<-loop.i1.sd(vec.to.loop)
+         }
+         else
+         {
+           if(to.loop=="i2.sd")
+           {
+             d<-loop.i2.sd(vec.to.loop)
+           }
+           else
+           {
+             if(to.loop=="k1.x")
+             {
+               d<-loop.k1.x(vec.to.loop)
+             }
+             else
+             {
+               if(to.loop=="k2.x")
+               {
+                 d<-loop.k2.x(vec.to.loop)
+               }
+               else
+               {
+                 if (to.loop=="k1.sd")
+                 {
+                   d<-loop.k1.sd(vec.to.loop)
+                 }
+                 else
+                 {
+                   if (to.loop=="k2.sd")
+                   {
+                     d<-loop.k2.sd(vec.to.loop)
+                   }
+                 }
+               }
+             }
+           }
+         }
+       }
+     }
+    }
+ }
+}
+
+
+
+
+
+
+
+loop.s.x<-function(vec.to.loop)
+{
+d<-sapply(vec.to.loop,Gen.pop(N,s.x=x,s.sd=1,i1.x=0,i2.x=0,i1.sd=1,i2.sd=1,k1.x=1,k2.x=1,k1.sd=.01,k2.sd=.01))
+}
+
+loop.s.sd<-function(vec.to.loop)
+{
+d<-sapply(vec.to.loop,Gen.pop(N,s.x=50,s.sd=x,i1.x=0,i2.x=0,i1.sd=1,i2.sd=1,k1.x=1,k2.x=1,k1.sd=.01,k2.sd=.01))
+}
+
+loop.i1.x<-function(vec.to.loop)
+{
+d<-sapply(vec.to.loop,Gen.pop(N,s.x=50,s.sd=1,i1.x=x,i2.x=0,i1.sd=1,i2.sd=1,k1.x=1,k2.x=1,k1.sd=.01,k2.sd=.01))
+}
+
+loop.i2.x<-function(vec.to.loop)
+{
+d<-sapply(vec.to.loop,Gen.pop(N,s.x=50,s.sd=x,i1.x=0,i2.x=x,i1.sd=1,i2.sd=1,k1.x=1,k2.x=1,k1.sd=.01,k2.sd=.01))
+}
+
+loop.i1.sd<-function(vec.to.loop)
+{
+d<-sapply(vec.to.loop,Gen.pop(N,s.x=50,s.sd=1,i1.x=0,i2.x=0,i1.sd=x,i2.sd=1,k1.x=1,k2.x=1,k1.sd=.01,k2.sd=.01))
+}
+
+loop.i2.sd<-function(vec.to.loop)
+{
+d<-sapply(vec.to.loop,Gen.pop(N,s.x=50,s.sd=1,i1.x=0,i2.x=0,i1.sd=1,i2.sd=x,k1.x=1,k2.x=1,k1.sd=.01,k2.sd=.01))
+}
+
+loop.k1.x<-function(vec.to.loop)
+{
+d<-sapply(vec.to.loop,Gen.pop(N,s.x=50,s.sd=1,i1.x=0,i2.x=0,i1.sd=1,i2.sd=1,k1.x=x,k2.x=1,k1.sd=.01,k2.sd=.01))
+}
+
+loop.k2.x<-function(vec.to.loop)
+{
+d<-sapply(vec.to.loop,Gen.pop(N,s.x=50,s.sd=1,i1.x=0,i2.x=0,i1.sd=x,i2.sd=1,k1.x=1,k2.x=x,k1.sd=.01,k2.sd=.01))
+}
+
+loop.k1.sd<-function(vec.to.loop)
+{
+d<-sapply(vec.to.loop,Gen.pop(N,s.x=50,s.sd=1,i1.x=0,i2.x=0,i1.sd=1,i2.sd=1,k1.x=1,k2.x=1,k1.sd=x,k2.sd=.01))
+}
+
+loop.k2.sd<-function(vec.to.loop)
+{
+d<-sapply(vec.to.loop,Gen.pop(N,s.x=50,s.sd=1,i1.x=0,i2.x=0,i1.sd=1,i2.sd=1,k1.x=1,k2.x=1,k1.sd=.01,k2.sd=x))
+}
+
+
+#function to calculate a new vector as the residuals from an RMA regression
+calc.resids<-function(x,y)
+{
+ l<-line.cis(y,x)
+ r<-y-(l$coef[1]+l$coef[2]*x)
+ return(r)
+}
+
+###Stabilizing selection function, data is the data frame containing the traits to select on and b is the strength of selection in standard deviations
+stab.select<-function(b,data)
+{
+ d1<-d[d$T2>(min(d$T2)+b*sd(d$T2))&d$T2<(max(d$T2)-b*sd(d$T2)),]
+ return(d1)
+}
+
+###Function to assess all the important parameters of a new data set so as to allow ‘reproduction’
+
+reproduce.basic<-function(d1,N)
+{
+ s.x<- mean(d1$s)
+ s.sd<- sd(d1$s)
+ i1.x<- mean(d1$i1)
+ i1.sd<- sd(d1$i1)
+ i2.x<- mean(d1$i2)
+ i2.sd<- sd(d1$i2)
+ k1.x<- mean(d1$k1)
+ k1.sd<- sd(d1$k1)
+ k2.x<- mean(d1$k2)
+ k2.sd<- sd(d1$k2)
+d2<-Gen.pop(N,s.x,s.sd,i1.x,i2.x,i1.sd,i2.sd,k1.x,k2.x,k1.sd,k2.sd)
+return(d2)
+}
+
+
+
+
+
+
+
+
+###Function that generates a population of size N, with two variables, T1 and
+#T2, correlated to some extent related to s, k1 and k2 (each individual traits
+#responsiveness to s??), with independent trait specific variation represented
+#by i1 and i2 (autonomous factors)
+Gen.pop<-function(N,s.x,s.sd,i1.x,i2.x,i1.sd,i2.sd,k1.x,k2.x,k1.sd,k2.sd)
+{
+ ###Generate T1 components
+ k1<-rnorm(N,k1.x,k1.sd)
+ s<-rnorm(N,s.x,s.sd)
+ i1<-rnorm(N,i1.x,i1.sd)
+
+ ###Generate T1
+ T1<-k1*s+i1
+
+ ###Generate T2 componentsn
+ k2<-rnorm(N,k2.x,k2.sd)
+ i2<-rnorm(N,i2.x,i2.sd)
+
+ ###Generate T2
+ T2<-k2*s+i2
+ d<-data.frame(T1,T2,s,i1,i2,k1,k2)
+
+ return(d)
+}
+
+
+
+#############################################################################
+#############################  Run of actual script  ###############################
+
+
+N<-10000
+b<-2
+
+###Start sd/mean ratio for s at about 2%, and sd/mean ratio for i and k at about 1% to produce #biologically normal looking data
+d<-Gen.pop(N,s.x=50,s.sd=1,i1.x=0,i2.x=0,i1.sd=1,i2.sd=1,k1.x=1,k2.x=1,k1.sd=.01,k2.sd=.01)
+plot(d$T1,d$T2)
+d0<-d
+d1<-stab.select(b,data=d)
+
+###Run function here that gets Rsquared, slopes, etc. for d and d1
+plot(d$T1,d$T2)
+line.cis(d$T1,d$T2)
+cor.test(d$T1,d$T2)
+
+###start loop
+for(i in 1:10)
+{
+d<-reproduce.basic(d1,N)
+d1<-stab.select(b,data=d)
+}
+
+line.cis(d0$T2,d0$T1,method=0)
+line.cis(d0$T2,d0$T1,method=1)
+line.cis(d0$T2,d0$T1,method=2)
+
+line.cis(d1$T2,d1$T1,method=0)
+line.cis(d1$T2,d1$T1,method=1)
+line.cis(d1$T2,d1$T1,method=2)
+
+cor.test(d0$T1,d0$T2)
+cor.test(d1$T1,d1$T2)
+
+plot(d0$T1,d0$T2)
+points(d1$T1,d1$T2,col="red")
+###Run function here that gets Rsquared, slopes, etc. for d and d1
+###end loop
+
+mean(d1$s)
+sd(d1$s)
+mean(d1$i1)
+sd(d1$i1)
+mean(d1$i2)
+sd(d1$i2)
+mean(d1$k1)
+mean(d1$k2)
+sd(d1$k1)
+sd(d1$k2)
+
+
+
+
+
+
+
+
+
+
